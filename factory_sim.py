@@ -12,8 +12,16 @@ send_msg={
     "HBW Storage": 9,
     "Light Sensors": "Clear"
 }
+#HBW Visual
+#|1||2||3|
+#|4||5||6|
+#|1||2||3|
+#HBW_Storage={
+#    ""
+#}
+
 while True:
-    client.publish("FactoryStatus", payload=json.dumps(send_msg)) #, qos=2, retain=False
+    client.publish("FactoryStatus", payload=json.dumps(send_msg)) #Sends data as json
     print("Just published " + json.dumps(send_msg) + " to Topic FactoryStatus")
     time.sleep(1)
     
