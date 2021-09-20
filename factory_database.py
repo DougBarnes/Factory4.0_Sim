@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-"""factory_database.py: Connects to a postgreSQL data base to control HBW inventory. """
-
+"""factory_database.py: Connects to a postgreSQL database 
+   to create and fill HBW inventory. """
 __author__      = "Doug Barnes"
 __version__     = "1.0.0"
 __maintainer__  = "Doug Barnes"
@@ -21,27 +21,57 @@ try:
     #### Create a cursor to perform database operations ####
     cursor = connection.cursor()
 
+    # HBW (factory_t)
+    #|1||2||3|
+    #|4||5||6|
+    #|7||8||9|
+
     #### SQL query to create a new table ####
-    create_table_query = '''CREATE TABLE mobile
-          (ID INT PRIMARY KEY     NOT NULL,
-          MODEL           TEXT    NOT NULL,
-          PRICE         REAL); '''
+    #create_table_query = '''CREATE TABLE factory_t
+          #(LOCATION INT PRIMARY KEY     NOT NULL,
+          #COLOR_ID           TEXT       NOT NULL,
+          #DISK_STORED        BOOL       NOT NULL,
+          #PALLET_STORED      BOOL       NOT NULL); '''
 
     #### Execute a command: this creates a new table ####
-    cursor.execute(create_table_query)
+    #cursor.execute(create_table_query)
+    #connection.commit()
+    #print("Table created successfully in PostgreSQL ")
+
+    # Executing a SQL query to insert data into  table
+    '''insert_query = """ INSERT INTO factory_t (LOCATION, COLOR_ID, DISK_STORED, PALLET_STORED) VALUES (1, 'Red01', True, True)"""
+    cursor.execute(insert_query)
     connection.commit()
-    print("Table created successfully in PostgreSQL ")
+    insert_query = """ INSERT INTO factory_t (LOCATION, COLOR_ID, DISK_STORED, PALLET_STORED) VALUES (2, 'Red02', True, True)"""
+    cursor.execute(insert_query)
+    connection.commit()
+    insert_query = """ INSERT INTO factory_t (LOCATION, COLOR_ID, DISK_STORED, PALLET_STORED) VALUES (3, 'Red03', True, True)"""
+    cursor.execute(insert_query)
+    connection.commit()
+    insert_query = """ INSERT INTO factory_t (LOCATION, COLOR_ID, DISK_STORED, PALLET_STORED) VALUES (4, 'Blue01', True, True)"""
+    cursor.execute(insert_query)
+    connection.commit()
+    insert_query = """ INSERT INTO factory_t (LOCATION, COLOR_ID, DISK_STORED, PALLET_STORED) VALUES (5, 'Blue02', True, True)"""
+    cursor.execute(insert_query)
+    connection.commit()
+    insert_query = """ INSERT INTO factory_t (LOCATION, COLOR_ID, DISK_STORED, PALLET_STORED) VALUES (6, 'Blue03', True, True)"""
+    cursor.execute(insert_query)
+    connection.commit()
+    insert_query = """ INSERT INTO factory_t (LOCATION, COLOR_ID, DISK_STORED, PALLET_STORED) VALUES (7, 'White01', True, True)"""
+    cursor.execute(insert_query)
+    connection.commit()
+    insert_query = """ INSERT INTO factory_t (LOCATION, COLOR_ID, DISK_STORED, PALLET_STORED) VALUES (8, 'White02', True, True)"""
+    cursor.execute(insert_query)
+    connection.commit()
+    insert_query = """ INSERT INTO factory_t (LOCATION, COLOR_ID, DISK_STORED, PALLET_STORED) VALUES (9, 'White03', True, True)"""
+    cursor.execute(insert_query)
+    connection.commit()
+    print("Record inserted successfully") '''
 
-    #### Print PostgreSQL details ####
-    #print("PostgreSQL server information")
-    #print(connection.get_dsn_parameters(), "\n")
-
-    #### Executing a SQL query ####
-    #cursor.execute("SELECT version();")
-
-    #### Fetch result ####
-    #record = cursor.fetchone()
-    #print("You are connected to - ", record, "\n")
+    # Fetch result
+    cursor.execute("SELECT * FROM factory_t")
+    record = cursor.fetchall()
+    print("Result ", record)
 
 except (Exception, Error) as error:
     print("Error while connecting to PostgreSQL", error)
