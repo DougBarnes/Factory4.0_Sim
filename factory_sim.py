@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-#http://www.steves-internet-guide.com/mqttv5-request-response/
 """factory_sim.py: Runs a simulation of the factory 4.0. """
 __author__      = "Doug Barnes"
 __version__     = "1.0.0"
@@ -9,20 +8,26 @@ __email__       = "barn1855@vandals.uidaho.edu"
 __status__      = "Production"
 
 import paho.mqtt.client as mqtt
-from paho.mqtt.properties import Properties
-from paho.mqtt.packettypes import PacketTypes 
 import time,logging,sys
 import json
 
-mqttv=mqtt.MQTTv5
-messages=[]
 mqttBroker = "mqtt.eclipseprojects.io"
-port = 8883
+#port = 8883
 
 import psycopg2
 from psycopg2 import Error
 
-#a python object (dict):
+# Flags
+message_received_flag = False
+
+# python object (dict)
+hand_shake={
+    "msg_type": "message confirmation",
+    "msg_confirmation_id": "CC####",
+    "msg_type_received": "order",
+    "msg_id": "SO####"
+}
+
 send_order_status={
     "msg_type": "order status",
     "sim_msg_id": "OS####",
@@ -31,26 +36,10 @@ send_order_status={
     "order_complete": "True"
 }
 
-def on_publish(client, userdata, mid):
-    print("published")
-
-def on_connect(client, userdata, flags, reasonCode,properties=None):
-    print('Connected ',flags)
-    print('Connected properties',properties)
-    print('Connected ',reasonCode)
-
 def on_message(client, userdata, message):
+    global message_received_flag
     print("Received message: ", str(message.payload.decode("utf-8")))
-    time.sleep(2)
-
-def on_disconnect(client, userdata, rc,properties):
-    print('Received Disconnect ',rc)
-
-def on_subscribe(client, userdata, mid, granted_qos,properties=None):
-    print('SUBSCRIBED')
-
-def on_unsubscribe(client, userdata, mid, properties, reasonCodes):
-    print('UNSUBSCRIBED') 
+    message_received_flag = True
 
 '''try:
     #### Connect to an existing database ####
@@ -63,42 +52,34 @@ def on_unsubscribe(client, userdata, mid, properties, reasonCodes):
     cursor = connection.cursor()
 '''
 ### MQTT Set up ###
-print("creating client")
-client = mqtt.Client("Factory Sim", protocol=mqttv)
-
-client.on_connect = on_connect
-client.on_message = on_message
-client.on_disconnect = on_disconnect
-client.on_subscribe = on_subscribe
-client.on_publish = on_publish
-
-properties = None
-client.connect(mqttBroker, port, properties=properties)
-client.loop_start()
-
-client.subscribe("FactoryStatus")
-time.sleep(2)
-
-client.message_received_flag=False
-print("Publish response topic")
-properties=Properties(PacketTypes.PUBLISH)
-properties.ResponseTopic='FactoryStatus'
-print("Starting Factory client")
+print("CREATING CLIENT")
+client = mqtt.Client("Factory Sim")
+client.connect(mqttBroker)
 
 while True:
-    client.publish("FactoryStatus", payload=json.dumps(send_order_status))
+    client.loop_start()
+    client.subscribe("UofICapstone_User")
+    client.on_message = on_message
 
-    while not client.message_received_flag:
-        time.sleep(1) #wait for message
-    client.message_received_flag=False
-    if len(messages)==0:
-        print("test failed")
-    else:
-        print("not failed")
+    if message_received_flag == True:
+        message_received_flag = False
+        print("HERE")
+        client.publish("UofICapstone_Sim", payload=json.dumps(send_order_status))
 
-    time.sleep(5)
+    print("-----Loop-----")
+    time.sleep(1)
+    #client.loop_end()
 
-client.disconnect()
+
+    #while not client.message_received_flag:
+        #time.sleep(1) #wait for message
+    #client.message_received_flag=False
+    #if len(messages)==0:
+        #print("test failed")
+    #else:
+        #print("not failed")
+
+#client.disconnect()
 
 
 '''except (Exception, Error) as error:
