@@ -12,7 +12,7 @@ import time,logging,sys
 import json
 
 mqttBroker = "mqtt.eclipseprojects.io"
-#port = 8883
+port = 8883
 
 import psycopg2
 from psycopg2 import Error
@@ -20,13 +20,18 @@ from psycopg2 import Error
 # Flags
 message_received_flag = False
 
-# python object (dict)
+# Variables
+fc_number = 1000
+os_number = 1000
+
+# Dictionaries
 hand_shake={
     "msg_type": "message confirmation",
-    "msg_confirmation_id": "CC####",
+    "msg_confirmation_id": "FC####",
     "msg_type_received": "order",
     "msg_id": "SO####"
 }
+#hand_shake["msg_confirmation_id"] = "CC1000"
 
 send_order_status={
     "msg_type": "order status",
@@ -55,6 +60,7 @@ def on_message(client, userdata, message):
 print("CREATING CLIENT")
 client = mqtt.Client("Factory Sim")
 client.connect(mqttBroker)
+hand_shake["msg_confirmation_id"] = "FC" + str(fc_number)
 
 while True:
     client.loop_start()
@@ -63,10 +69,13 @@ while True:
 
     if message_received_flag == True:
         message_received_flag = False
-        print("HERE")
+        client.publish("UofICapstone_Sim", payload=json.dumps(hand_shake))
+        print("....SENT HANDSHAKE...")
+        time.sleep(3)
         client.publish("UofICapstone_Sim", payload=json.dumps(send_order_status))
+        print("....SENT ORDERSTATUS...")
 
-    print("-----Loop-----")
+    #print("-----Loop-----")
     time.sleep(1)
     #client.loop_end()
 
