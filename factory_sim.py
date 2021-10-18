@@ -7,10 +7,12 @@ __maintainer__  = "Doug Barnes"
 __email__       = "barn1855@vandals.uidaho.edu"
 __status__      = "Production"
 
+from apscheduler.schedulers.blocking import BlockingScheduler
 import paho.mqtt.client as mqtt
+from datetime import datetime
 import time,logging,sys
-import schedule
 import json
+import os
 
 mqttBroker = "mqtt.eclipseprojects.io"
 port = 8883
@@ -20,6 +22,11 @@ port = 8883
 
 # Flags
 message_received_flag = False
+hbw_flag = False
+vgr_flag = False
+mpo_flag = False
+ssc_flag = False
+sld_flag = False
 
 # Variables
 fc_number = 1000
@@ -127,7 +134,6 @@ def handshake(hand_shake):
     print("....SENT HANDSHAKE...")
 
 def factory_start():
-    schedule.run_pending()
     print("Factory Started ....")
 
 def factory_end():
@@ -135,7 +141,9 @@ def factory_end():
     print("....SENT ORDERSTATUS...")
     print("Factory Ended ....")
 
-schedule.every(10).seconds.do(factory_end)
+scheduler = BlockingScheduler()
+scheduler.add_executor('processpool')
+scheduler.add_job(factory_start, 'interval', seconds=1)
 
 '''try:
     #### Connect to an existing database ####

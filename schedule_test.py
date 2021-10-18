@@ -1,21 +1,43 @@
-#https://www.youtube.com/watch?v=zF_DroDICaM
-import schedule
-import time
+"""
+Demonstrates how to schedule a job to be run in a process pool on 3 second intervals.
+"""
 
-def job():
-    print("Reading time ...")
+from datetime import datetime
+import os
 
-def coding():
-    print("Coding time ...")
+from apscheduler.schedulers.blocking import BlockingScheduler
 
-def playing():
-    print("Playing time ...")
+choice = ''
 
-#time
-schedule.every(5).seconds.do(job)
-schedule.every(10).seconds.do(coding)
-schedule.every().day.at("11:39").do(playing)
+def firsttick():
+    print('First Tick!: %s' % datetime.now())
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+def secondtick():
+    print('Second Tick!: %s' % datetime.now())
+
+def thirdtick():
+    print('Third Tick!: %s' % datetime.now())
+
+if __name__ == '__main__':
+    scheduler = BlockingScheduler()
+    scheduler.add_executor('processpool')
+    scheduler.add_job(firsttick, 'interval', seconds=3)
+    scheduler.add_job(secondtick, 'interval', seconds=3)
+    scheduler.add_job(thirdtick, 'interval', seconds=3)
+
+    while choice != 'q':
+        choice = input("Waiting for input: ")
+
+        if choice == '1':
+            print("scheduler start...")
+            scheduler.start()
+
+        elif choice == 'q':
+            print("Exiting...")
+
+'''
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+'''
