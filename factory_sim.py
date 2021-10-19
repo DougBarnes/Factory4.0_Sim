@@ -22,6 +22,7 @@ port = 8883
 
 # Flags
 message_received_flag = False
+factory_running = False
 hbw_flag = False
 vgr_flag = False
 mpo_flag = False
@@ -134,7 +135,26 @@ def handshake(hand_shake):
     print("....SENT HANDSHAKE...")
 
 def factory_start():
+    global factory_running
+    factory_running = True
     print("Factory Started ....")
+    #scheduler.pause(factory_start)
+    
+
+def hbw_running():
+    print("HBW Started ....")
+
+def vgr_running():
+    print("VGR Started ....")
+
+def mpo_running():
+    print("MPO Started ....")
+
+def sld_running():
+    print("SLD Started ....")
+
+def ssc_running():
+    print("SSC Started ....")
 
 def factory_end():
     client.publish("UofICapstone_Sim", payload=json.dumps(order_status))
@@ -144,6 +164,8 @@ def factory_end():
 scheduler = BlockingScheduler()
 scheduler.add_executor('processpool')
 scheduler.add_job(factory_start, 'interval', seconds=1)
+scheduler.start(paused=True)
+
 
 '''try:
     #### Connect to an existing database ####
@@ -166,17 +188,20 @@ while True:
     client.subscribe("UofICapstone_User")
     client.on_message = on_message
 
+    #time.sleep(3)
+    #scheduler.pause()
+
     if message_received_flag == True:
         message_received_flag = False
-        
+        scheduler.resume()
         handshake(hand_shake)
-        factory_start()
+        #scheduler.resume(factory_start)
         #time.sleep(3)
         #client.publish("UofICapstone_Sim", payload=json.dumps(order_status))
         #print("....SENT ORDERSTATUS...")
 
     #print("-----Loop-----")
-    time.sleep(1)
+    #time.sleep(5)
     #client.loop_end()
 
 
