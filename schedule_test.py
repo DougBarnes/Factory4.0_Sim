@@ -25,6 +25,10 @@ if __name__ == '__main__':
     scheduler.add_job(secondtick, 'interval', seconds=3)
     scheduler.add_job(thirdtick, 'interval', seconds=3)
 
+    scheduler.start()
+
+    
+'''
     while choice != 'q':
         choice = input("Waiting for input: ")
 
@@ -34,7 +38,7 @@ if __name__ == '__main__':
 
         elif choice == 'q':
             print("Exiting...")
-
+'''
 '''
     try:
         scheduler.start()
