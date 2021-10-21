@@ -8,17 +8,21 @@ __email__       = "barn1855@vandals.uidaho.edu"
 __status__      = "Production"
 
 from apscheduler.schedulers.background import BackgroundScheduler
-#import paho.mqtt.client as mqtt
-import mqtt_clients
+from datetime import datetime, timedelta
+import paho.mqtt.client as mqtt
 from datetime import datetime
 import time,logging,sys
 import json
 import os
 
+mqttBroker = "mqtt.eclipseprojects.io"
+port = 8883
+
 #import psycopg2
 #from psycopg2 import Error
 
 # Flags
+message_received_flag = False
 factory_running = False
 hbw_flag = False
 vgr_flag = False
@@ -30,43 +34,105 @@ sld_flag = False
 fc_number = 1000
 os_number = 1000
 
-def factory_start():
-    #global FJbo
+# Dictionaries
+hand_shake={
+    "msg_type": "message confirmation",
+    "msg_confirmation_id": "FC####",
+    "msg_type_received": "order",
+    "msg_id": "SO####"
+}
+
+order_status={
+    "msg_type": "status",
+    "sim_msg_id": "S####",
+    "cloud_id": "SO####",
+    "disk_color_id": "RED01", 
+    "order_complete": "True"
+}
+
+def factory_master():
     global factory_running
-    factory_running = True
-    print("Factory Started ....")
-    scheduler.FJob.Job.pause()
-    #FJob.remove()
-    
-def hbw_running():
-    print("HBW Started ....")
+    global message_received_flag
 
-def vgr_running():
-    print("VGR Started ....")
+    ### MQTT Set up ###
+    print("CREATING CLIENT")
+    client = mqtt.Client("Factory Sim")
+    client.connect(mqttBroker)
+    client.loop_start()
+    client.subscribe("UofICapstone_User")
+    client.on_message = on_message
 
-def mpo_running():
-    print("MPO Started ....")
+    #print("Factory Check ....")
+    while True:
+        time.sleep(0.5)
 
-def sld_running():
-    print("SLD Started ....")
+        if message_received_flag == True:
+            #scheduler.remove_job('factory_job')
+            factory_running = True
+            print("Factory Started ....")
+            #update status*** also add a cancel in here somehow
+            time.sleep(1)
 
-def ssc_running():
-    print("SSC Started ....")
+            print("HBW Start ....")
+            hbw_flag = True
+            #update status***
+            time.sleep(3)
+            hbw_flag = False
+            print("HBW End ....")
 
-def factory_end():
-    #client.publish("UofICapstone_Sim", payload=json.dumps(order_status))
-    print("....SENT ORDERSTATUS...")
-    print("Factory Ended ....")
+            print("VGR Start ....")
+            vgr_flag = True
+            #update status***
+            time.sleep(3)
+            vgr_flag = False
+            print("VGR End ....")
 
-#MAIN (Add pause job)
+            print("MPO Start ....")
+            mpo_flag = True
+            #update status***
+            time.sleep(3)
+            mpo_flag = False
+            print("MPO End ....")
+
+            print("SLD Start ....")
+            sld_flag = True
+            #update status***
+            time.sleep(3)
+            sld_flag = False
+            print("SLD End ....")
+
+            message_received_flag = False
+            print("Factory Ended ....")
+            
+
+def on_message(client, userdata, message):
+    global message_received_flag
+    print("Received message: ", str(message.payload.decode("utf-8")))
+    message_received_flag = True
+
+def handshake(hand_shake):
+    client.publish("UofICapstone_Sim", payload=json.dumps(hand_shake))
+    print("....SENT HANDSHAKE...")
+
+#MAIN
 if __name__ == '__main__':
     scheduler = BackgroundScheduler()
-    scheduler.add_job(factory_start, 'interval', seconds=1, id=factorystart)
+    time_now = datetime.now() + timedelta(seconds=2)
+    scheduler.add_job(factory_master, 'date', run_date=time_now, id='factory_job')
     scheduler.start()
     print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
 
     try:
         # This is here to simulate application activity (which keeps the main thread alive).
+        ### MQTT Set up ###
+        '''
+        print("CREATING CLIENT")
+        client = mqtt.Client("Factory Sim")
+        client.connect(mqttBroker)
+        client.loop_start()
+        client.subscribe("UofICapstone_User")
+        client.on_message = on_message
+        '''
         while True:
             time.sleep(2)
     except (KeyboardInterrupt, SystemExit):
