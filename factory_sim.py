@@ -41,6 +41,7 @@ hand_shake={
     "msg_type_received": "order",
     "msg_id": "SO####"
 }
+#hand_shake["msg_confirmation_id"] = "CC1000"
 
 order_status={
     "msg_type": "status",
@@ -48,6 +49,81 @@ order_status={
     "cloud_id": "SO####",
     "disk_color_id": "RED01", 
     "order_complete": "True"
+}
+
+status={
+    "msg_type": "order status",
+    "sim_msg_id": "OS####",
+    "cloud_id": "SO####",
+    "running": "False", 
+    "HBW": "False",
+    "VGR": "False", 
+    "MPO": "False",
+    "SSC": "False", 
+    "SLD": "False"
+}
+
+inventory={
+    "msg_type": "inventory",
+    "sim_msg_id": "I####",
+    "cloud_id": "PI####",
+
+    "location01": "RED01", 
+    "disk_stored": "True", 
+    "pallet_stored": "True",
+
+    "location02": "RED02", 
+    "disk_stored": "True", 
+    "pallet_stored": "True",
+
+    "location03": "RED03", 
+    "disk_stored": "True", 
+    "pallet_stored": "True",
+
+    "location04": "BLUE01", 
+    "disk_stored": "True", 
+    "pallet_stored": "True",
+
+    "location05": "BLUE02", 
+    "disk_stored": "True", 
+    "pallet_stored": "True",
+
+    "location06": "BLUE03", 
+    "disk_stored": "True", 
+    "pallet_stored": "True",
+
+    "location07": "White01", 
+    "disk_stored": "True", 
+    "pallet_stored": "True",
+
+    "location08": "White02", 
+    "disk_stored": "True", 
+    "pallet_stored": "True",
+
+    "location09": "White03", 
+    "disk_stored": "True", 
+    "pallet_stored": "True",
+}
+
+cancel_status={
+    "msg_type": "cancel status",
+    "sim_msg_id": "CS####",
+    "cloud_id": "CO####",
+    "canceled": "False"
+}
+
+webcam_status={
+    "msg_type": "webcam status",
+    "sim_msg_id": "WS####",
+    "power": "False",
+    "y_turntable": "0",
+    "x_turntable": "0"
+}
+
+unable_status={
+    "msg_type": "unable status",
+    "sim_msg_id": "US####",
+    "cloud_id": "PI####"
 }
 
 def factory_master():
@@ -65,9 +141,9 @@ def factory_master():
     #print("Factory Check ....")
     while True:
         time.sleep(0.5)
-
+        
         if message_received_flag == True:
-            #scheduler.remove_job('factory_job')
+            handshake(client, hand_shake)
             factory_running = True
             print("Factory Started ....")
             #update status*** also add a cancel in here somehow
@@ -76,41 +152,53 @@ def factory_master():
             print("HBW Start ....")
             hbw_flag = True
             #update status***
-            time.sleep(3)
+            time.sleep(2)
             hbw_flag = False
             print("HBW End ....")
 
             print("VGR Start ....")
             vgr_flag = True
             #update status***
-            time.sleep(3)
+            time.sleep(2)
             vgr_flag = False
             print("VGR End ....")
 
             print("MPO Start ....")
             mpo_flag = True
             #update status***
-            time.sleep(3)
+            time.sleep(2)
             mpo_flag = False
             print("MPO End ....")
 
             print("SLD Start ....")
             sld_flag = True
             #update status***
-            time.sleep(3)
+            time.sleep(2)
             sld_flag = False
             print("SLD End ....")
 
             message_received_flag = False
             print("Factory Ended ....")
-            
+         
+def update_status(cloud_id, factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag):
+    status["cloud_id"] = cloud_id
+    status["running"] = factory_running
+    status["HBW"] = hbw_flag
+    status["VGR"] = vgr_flag
+    status["MPO"] = mpo_flag
+    status["SSC"] = ssc_flag
+    status["SLD"] = sld_flag
 
 def on_message(client, userdata, message):
     global message_received_flag
-    print("Received message: ", str(message.payload.decode("utf-8")))
+    recieved_message = str(message.payload.decode("utf-8"))
+    print("***")
+    #print(recieved_message["msg_type"])
+    print("***")
+    print("Received message: ", recieved_message)
     message_received_flag = True
 
-def handshake(hand_shake):
+def handshake(client, hand_shake):
     client.publish("UofICapstone_Sim", payload=json.dumps(hand_shake))
     print("....SENT HANDSHAKE...")
 
@@ -124,15 +212,6 @@ if __name__ == '__main__':
 
     try:
         # This is here to simulate application activity (which keeps the main thread alive).
-        ### MQTT Set up ###
-        '''
-        print("CREATING CLIENT")
-        client = mqtt.Client("Factory Sim")
-        client.connect(mqttBroker)
-        client.loop_start()
-        client.subscribe("UofICapstone_User")
-        client.on_message = on_message
-        '''
         while True:
             time.sleep(2)
     except (KeyboardInterrupt, SystemExit):

@@ -60,6 +60,8 @@ while choice != 'q':
 
     ### CHOICE 1: Order a product from the factory ###
     if choice == '1':
+        so_number = so_number + 1
+        send_order["sim_msg_id"] = "SO" + str(so_number)
         client.publish("UofICapstone_User", payload=json.dumps(send_order))
         #client.on_message = on_message
         time.sleep(3)
