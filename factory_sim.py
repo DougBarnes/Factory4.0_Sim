@@ -53,7 +53,6 @@ order_status={
 
 status={
     "msg_type": "order status",
-    "sim_msg_id": "OS####",
     "cloud_id": "SO####",
     "running": "False", 
     "HBW": "False",
@@ -127,8 +126,7 @@ unable_status={
 }
 
 def factory_master():
-    global factory_running
-    global message_received_flag
+    global message_received_flag, factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag
 
     ### MQTT Set up ###
     print("CREATING CLIENT")
@@ -147,41 +145,44 @@ def factory_master():
             factory_running = True
             print("Factory Started ....")
             #update status*** also add a cancel in here somehow
+            update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
+            print(status)
             time.sleep(1)
 
             print("HBW Start ....")
             hbw_flag = True
-            #update status***
+            update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
             time.sleep(2)
             hbw_flag = False
             print("HBW End ....")
 
             print("VGR Start ....")
             vgr_flag = True
-            #update status***
+            update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
             time.sleep(2)
             vgr_flag = False
             print("VGR End ....")
 
             print("MPO Start ....")
             mpo_flag = True
-            #update status***
+            update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
             time.sleep(2)
             mpo_flag = False
             print("MPO End ....")
 
             print("SLD Start ....")
             sld_flag = True
-            #update status***
+            update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
             time.sleep(2)
             sld_flag = False
             print("SLD End ....")
 
             message_received_flag = False
+            update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
             print("Factory Ended ....")
          
-def update_status(cloud_id, factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag):
-    status["cloud_id"] = cloud_id
+def update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag):
+    #status["cloud_id"] = cloud_id
     status["running"] = factory_running
     status["HBW"] = hbw_flag
     status["VGR"] = vgr_flag
@@ -192,9 +193,13 @@ def update_status(cloud_id, factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_f
 def on_message(client, userdata, message):
     global message_received_flag
     recieved_message = str(message.payload.decode("utf-8"))
+
     print("***")
-    #print(recieved_message["msg_type"])
+    if message_received_flag == True:
+        print("!*!*!*!*! UNABLE !*!*!*!*!*!")
     print("***")
+
+    status["cloud_id"] = recieved_message[37:43]
     print("Received message: ", recieved_message)
     message_received_flag = True
 
