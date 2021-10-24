@@ -121,7 +121,6 @@ webcam_status={
 
 unable_status={
     "msg_type": "unable status",
-    "sim_msg_id": "US####",
     "cloud_id": "PI####"
 }
 
@@ -194,14 +193,32 @@ def on_message(client, userdata, message):
     global message_received_flag
     recieved_message = str(message.payload.decode("utf-8"))
 
-    print("***")
-    if message_received_flag == True:
-        print("!*!*!*!*! UNABLE !*!*!*!*!*!")
-    print("***")
-
-    status["cloud_id"] = recieved_message[37:43]
-    print("Received message: ", recieved_message)
-    message_received_flag = True
+    # SO is Send Order from cloud
+    if recieved_message[37:39] == "SO":
+        if message_received_flag == True:
+            print("***")
+            print("!*!*!*!*! UNABLE !*!*!*!*!*!")
+            unable_status["cloud_id"] = recieved_message[37:43]
+            client.publish("UofICapstone_Sim", payload=json.dumps(unable_status))   
+            print("***")
+            '''
+            "msg_type": "unable status",
+            "cloud_id": "PI####"
+            '''
+        else:
+            status["cloud_id"] = recieved_message[37:43]
+            print("Received message: ", recieved_message)
+            message_received_flag = True
+    # RS is Request Status from cloud
+    elif recieved_message[37:39] == "SO":
+    # PI is Perform Inventory from cloud
+    elif recieved_message[37:39] == "SO":
+    # CO is Cancel Order from cloud
+    elif recieved_message[37:39] == "SO":
+    # WC is Webcam from cloud
+    elif recieved_message[37:39] == "SO":
+    # CW is Control Webcam from cloud
+    elif recieved_message[37:39] == "SO":
 
 def handshake(client, hand_shake):
     client.publish("UofICapstone_Sim", payload=json.dumps(hand_shake))
