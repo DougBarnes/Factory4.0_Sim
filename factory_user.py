@@ -32,8 +32,7 @@ hand_shake={
 send_order={
     "msg_type": "order",
     "sim_msg_id": "SO####",
-    "x": 1,
-    "y": 1
+    "location" : "location01"
 }
 
 request_status={
@@ -52,6 +51,19 @@ cancel_order={
     "order_id": "SO####"
 }
 
+webcam={
+    "msg_type": "webcam",
+    "cloud_msg_id": "WP####",
+    "power": "True"
+}
+
+control_webcam={
+    "msg_type": "control webcam",
+    "cloud_msg_id": "CW####",
+    "y_turntable": 1, 
+    "x_turntable": 1
+}
+
 def on_message(client, userdata, message):
     global message_received_flag
     print("RECEIVED MESSAGE: ")
@@ -68,6 +80,8 @@ print("1: Send Order")
 print("2: Request Status")
 print("3: Perform Inventory")
 print("4: Cancel Order")
+print("5: Webcam")
+print("6: Control Webcam")
 print("q: Quit")
 print("************************")
 
@@ -83,7 +97,7 @@ while choice != 'q':
 
     ### CHOICE 1: Order a product from the factory ###
     if choice == '1':
-        so_number = so_number + 1
+        so_number = so_number + 1 #SO number generation
         send_order["sim_msg_id"] = "SO" + str(so_number)
         client.publish("UofICapstone_User", payload=json.dumps(send_order))
         #client.on_message = on_message
@@ -107,6 +121,12 @@ while choice != 'q':
     elif choice == '4':
         print("Sent Request Status.....")
         client.publish("UofICapstone_User", payload=json.dumps(cancel_order))
+    elif choice == '5':
+        print("Sent Webcam.....")
+        client.publish("UofICapstone_User", payload=json.dumps(webcam))
+    elif choice == '6':
+        print("Sent Control Webcam.....")
+        client.publish("UofICapstone_User", payload=json.dumps(control_webcam))
     elif choice == 'q':
         print("Exiting.....")
     else:
