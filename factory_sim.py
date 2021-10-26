@@ -18,6 +18,7 @@ import os
 mqttBroker = "mqtt.eclipseprojects.io"
 port = 8883
 
+#LOOK UP JSON LIB
 #import psycopg2
 #from psycopg2 import Error
 
@@ -25,6 +26,7 @@ port = 8883
 message_received_flag = False
 perform_inventory_flag = False
 order_canceled = False
+cancel_flag = False
 factory_running = False
 hbw_flag = False
 vgr_flag = False
@@ -125,8 +127,11 @@ unable_status={
     "cloud_id": "PI####"
 }
 
+#*********************************************
+#* * * * * * * FACTORY MASTER * * * * * * * * 
+#*********************************************
 def factory_master():
-    global message_received_flag, order_canceled, factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag
+    global message_received_flag, order_canceled, factory_running, cancel_flag, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag
 
     ### MQTT Set up ###
     print("CREATING CLIENT")
@@ -139,46 +144,53 @@ def factory_master():
     #print("Factory Check ....")
     while True:
         time.sleep(0.5)
-        
+        #***************************
+        #* * * * RUN FACTORY * * * *
+        #***************************
         if message_received_flag == True:
             handshake(client, hand_shake)
             factory_running = True
             print("Factory Started ....")
-            #update status*** also add a cancel in here somehow
+
             update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
             print(status)
             time.sleep(1)
 
+            #* * * * HBW * * * *
             if order_canceled == True:
                 print("ORDER HAS BEEN CANCELED")
             else:
                 print("HBW Start ....")
                 hbw_flag = True
                 update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
-                time.sleep(2)
+                time.sleep(5)
                 hbw_flag = False
                 print("HBW End ....")
 
+            #* * * * VGR * * * *
             if order_canceled == True:
                 print("ORDER HAS BEEN CANCELED")
             else:
                 print("VGR Start ....")
                 vgr_flag = True
                 update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
-                time.sleep(2)
+                time.sleep(5)
                 vgr_flag = False
                 print("VGR End ....")
             
+            #* * * * MPO * * * *
             if order_canceled == True:
                 print("ORDER HAS BEEN CANCELED")
             else:
                 print("MPO Start ....")
                 mpo_flag = True
+                cancel_flag = True
                 update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
                 time.sleep(4)
                 mpo_flag = False
                 print("MPO End ....")
 
+            #* * * * SLD * * * *
             if order_canceled == True:
                 print("ORDER HAS BEEN CANCELED")
             else:
@@ -191,13 +203,19 @@ def factory_master():
                 client.publish("UofICapstone_Sim", payload=json.dumps(order_status))
 
             message_received_flag = False
+            factory_running = False
+            order_canceled = False
             update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag)
             print("Factory Ended ....")
+            cancel_flag = False
 
         elif perform_inventory_flag == True:
             print("Performing inventory")
             #perform inventory
          
+#*********************************************
+#* * * * * * * UPDATE STATUS * * * * * * * * *
+#*********************************************
 def update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_flag):
     #status["cloud_id"] = cloud_id
     status["running"] = factory_running
@@ -207,24 +225,28 @@ def update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_f
     status["SSC"] = ssc_flag
     status["SLD"] = sld_flag
 
+#*********************************************
+#* * * * * * * * ON MESSAGE * * * * * * * * *
+#*********************************************
 def on_message(client, userdata, message):
-    global message_received_flag, order_canceled
+    global message_received_flag, order_canceled, cancel_flag
+
     recieved_message = str(message.payload.decode("utf-8"))
+    print("***************************************")
+    print(json.loads(message.payload.decode("utf-8")))
+    print("***************************************")
     print("Here: ", recieved_message[13:18])
+
     # Order sent from cloud
     if recieved_message[13:18] == "order":
         if message_received_flag == True:
-            print("***")
-            print("!*!*!*!*! UNABLE !*!*!*!*!*!")
+            print("!*!*!*!*! ORDER UNABLE !*!*!*!*!*!")
             unable_status["cloud_id"] = recieved_message[41:47]
+            print(unable_status["cloud_id"])
             client.publish("UofICapstone_Sim", payload=json.dumps(unable_status))
-            print("***")
-            '''
-            "msg_type": "unable status",
-            "cloud_id": "PI####"
-            '''
+
         else:
-            status["cloud_id"] = recieved_message[49:56]
+            status["cloud_id"] = recieved_message[43:48]
             print("Received message: ", recieved_message)
             message_received_flag = True
 
@@ -240,8 +262,9 @@ def on_message(client, userdata, message):
         print("This is the cloud_id: ", recieved_message[49:55])
         # Unable to perform inventory while factory is running
         if message_received_flag == True:
-            print("****Unable to perform inventory")
+            print("!*!*!*!*! INVENTORY UNABLE !*!*!*!*!*!")
             unable_status["cloud_id"] = recieved_message[49:56]
+            print(unable_status["cloud_id"])
             client.publish("UofICapstone_Sim", payload=json.dumps(unable_status))
         # Start Perform Inventory
         else:
@@ -251,8 +274,11 @@ def on_message(client, userdata, message):
     # Cancel Order from cloud
     elif recieved_message[13:18] == "cance":
         # if factory is before MPO then you can cancel, stop the thread
-        if status["MPO"] == True or status["SLD"] == True:
-            print("Unable to cancel")
+        #status["MPO"] == True or status["SLD"] == True or 
+        if cancel_flag == True:
+            print("!*!*!*!*! CANCEL UNABLE !*!*!*!*!*!")
+            unable_status["cloud_id"] = recieved_message[49:56]
+            print(unable_status["cloud_id"])
             client.publish("UofICapstone_Sim", payload=json.dumps(unable_status))
         elif message_received_flag == False:
             print("Nothing to cancel")
@@ -273,11 +299,16 @@ def on_message(client, userdata, message):
         # move camera and keep factory running.
         print("Control Webcam")
 
+#*********************************************
+#* * * * * * * * * HANDSHAKE * * * * * * * * *
+#*********************************************
 def handshake(client, hand_shake):
     client.publish("UofICapstone_Sim", payload=json.dumps(hand_shake))
     print("....SENT HANDSHAKE...")
 
-#MAIN
+#********************************************
+#* * * * * * * * * MAIN * * * * * * * * * * *
+#********************************************
 if __name__ == '__main__':
     scheduler = BackgroundScheduler()
     time_now = datetime.now() + timedelta(seconds=2)

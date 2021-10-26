@@ -28,37 +28,37 @@ hand_shake={
     "msg_type_received": "order",
     "msg_id": "SO####"
 }
-
+#Removed _ from mes_type to match the slicer better.
 send_order={
-    "msg_type": "order",
+    "msgtype": "order",
     "sim_msg_id": "SO####",
     "location" : "location01"
 }
 
 request_status={
-    "msg_type": "request status",
+    "msgtype": "request status",
     "sim_msg_id": "RS####"
 }
 
 perform_inventory={
-    "msg_type": "perform inventory",
+    "msgtype": "perform inventory",
     "sim_msg_id": "PI####"
 }
 
 cancel_order={
-    "msg_type": "cancel order",
+    "msgtype": "cancel order",
     "sim_msg_id": "CO####",
     "order_id": "SO####"
 }
 
 webcam={
-    "msg_type": "webcam",
+    "msgtype": "webcam",
     "cloud_msg_id": "WP####",
     "power": "True"
 }
 
 control_webcam={
-    "msg_type": "control webcam",
+    "msgtype": "control webcam",
     "cloud_msg_id": "CW####",
     "y_turntable": 1, 
     "x_turntable": 1
@@ -99,14 +99,14 @@ while choice != 'q':
     if choice == '1':
         so_number = so_number + 1 #SO number generation
         send_order["sim_msg_id"] = "SO" + str(so_number)
-        client.publish("UofICapstone_User", payload=json.dumps(send_order))
+        client.publish("UofICapstone_Cloud", payload=json.dumps(send_order))
         #client.on_message = on_message
         time.sleep(3)
 
         while message_received_flag == False:
-            client.publish("UofICapstone_User", payload=json.dumps(send_order))
+            client.publish("UofICapstone_Cloud", payload=json.dumps(send_order))
             print("HANDSHAKE NOT RECIEVED.................")
-            time.sleep(3)
+            time.sleep(1)
 
         print("...JUST PUBLISHED...")
         print(str(send_order))
@@ -114,19 +114,19 @@ while choice != 'q':
         message_received_flag = False
     elif choice == '2':
         print("Sent Request Status.....")
-        client.publish("UofICapstone_User", payload=json.dumps(request_status))
+        client.publish("UofICapstone_Cloud", payload=json.dumps(request_status))
     elif choice == '3':
         print("Sent Perform Inventory Request.....")
-        client.publish("UofICapstone_User", payload=json.dumps(perform_inventory))
+        client.publish("UofICapstone_Cloud", payload=json.dumps(perform_inventory))
     elif choice == '4':
-        print("Sent Request Status.....")
-        client.publish("UofICapstone_User", payload=json.dumps(cancel_order))
+        print("Sent Cancel Status.....")
+        client.publish("UofICapstone_Cloud", payload=json.dumps(cancel_order))
     elif choice == '5':
         print("Sent Webcam.....")
-        client.publish("UofICapstone_User", payload=json.dumps(webcam))
+        client.publish("UofICapstone_Cloud", payload=json.dumps(webcam))
     elif choice == '6':
         print("Sent Control Webcam.....")
-        client.publish("UofICapstone_User", payload=json.dumps(control_webcam))
+        client.publish("UofICapstone_Cloud", payload=json.dumps(control_webcam))
     elif choice == 'q':
         print("Exiting.....")
     else:
