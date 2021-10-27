@@ -41,9 +41,8 @@ os_number = 1000
 # Dictionaries
 hand_shake={
     "msg_type": "message confirmation",
-    "msg_confirmation_id": "FC####",
-    "msg_type_received": "order",
-    "msg_id": "SO####"
+    "msg_confirmation_id": "FC1000",
+    "msg_type_received": "order"
 }
 #hand_shake["msg_confirmation_id"] = "CC1000"
 
@@ -67,8 +66,7 @@ status={
 
 inventory={
     "msg_type": "inventory",
-    "sim_msg_id": "I####",
-    "cloud_id": "PI####",
+    "cloud_id": "PI1000",
 
     "location01": "RED01", 
     "disk_stored": "True", 
@@ -109,14 +107,13 @@ inventory={
 
 cancel_status={
     "msg_type": "cancel status",
-    "sim_msg_id": "CS####",
     "cloud_id": "CO####",
     "canceled": "False"
 }
 
 webcam_status={
     "msg_type": "webcam status",
-    "sim_msg_id": "WS####",
+    "cloud_id": "WP1000", #or CW1000
     "power": "False",
     "y_turntable": "0",
     "x_turntable": "0"
@@ -231,39 +228,46 @@ def update_status(factory_running, hbw_flag, vgr_flag, mpo_flag, ssc_flag, sld_f
 def on_message(client, userdata, message):
     global message_received_flag, order_canceled, cancel_flag
 
-    recieved_message = str(message.payload.decode("utf-8"))
+    #recieved_message = str(message.payload.decode("utf-8"))
     print("***************************************")
-    print(json.loads(message.payload.decode("utf-8")))
-    print("***************************************")
-    print("Here: ", recieved_message[13:18])
+    recieved_message = json.loads(message.payload.decode("utf-8"))
+    msg_type_received = recieved_message["msg_type"]
+    cloud_id_received = recieved_message["cloud_id"]
+    print(recieved_message)
+    print(msg_type_received)
+    print(cloud_id_received)
+    #print("***************************************")
 
     # Order sent from cloud
-    if recieved_message[13:18] == "order":
+    if msg_type_received == "order":
+        print(recieved_message["location"])
+        print("***************************************")
         if message_received_flag == True:
             print("!*!*!*!*! ORDER UNABLE !*!*!*!*!*!")
-            unable_status["cloud_id"] = recieved_message[41:47]
+            unable_status["cloud_id"] = cloud_id_received
             print(unable_status["cloud_id"])
             client.publish("UofICapstone_Sim", payload=json.dumps(unable_status))
 
         else:
-            status["cloud_id"] = recieved_message[43:48]
+            status["cloud_id"] = cloud_id_received
             print("Received message: ", recieved_message)
             message_received_flag = True
 
     # Request Status from cloud
-    elif recieved_message[13:18] == "reque":
+    elif msg_type_received == "request status":
+        print("***************************************")
         # Give the Cloud the status and keep running the system
         print("Request Status")
         client.publish("UofICapstone_Sim", payload=json.dumps(status))
         print(status)
 
     # Perform Inventory from cloud
-    elif recieved_message[13:18] == "inven":
-        print("This is the cloud_id: ", recieved_message[49:55])
+    elif msg_type_received == "perform inventory":
+        print("***************************************")
         # Unable to perform inventory while factory is running
         if message_received_flag == True:
             print("!*!*!*!*! INVENTORY UNABLE !*!*!*!*!*!")
-            unable_status["cloud_id"] = recieved_message[49:56]
+            #unable_status["cloud_id"] = recieved_message[49:56]
             print(unable_status["cloud_id"])
             client.publish("UofICapstone_Sim", payload=json.dumps(unable_status))
         # Start Perform Inventory
@@ -272,12 +276,13 @@ def on_message(client, userdata, message):
             client.publish("UofICapstone_Sim", payload=json.dumps(inventory))
     
     # Cancel Order from cloud
-    elif recieved_message[13:18] == "cance":
+    elif msg_type_received == "cancel order":
+        print("***************************************")
         # if factory is before MPO then you can cancel, stop the thread
         #status["MPO"] == True or status["SLD"] == True or 
         if cancel_flag == True:
             print("!*!*!*!*! CANCEL UNABLE !*!*!*!*!*!")
-            unable_status["cloud_id"] = recieved_message[49:56]
+            #unable_status["cloud_id"] = recieved_message[49:56]
             print(unable_status["cloud_id"])
             client.publish("UofICapstone_Sim", payload=json.dumps(unable_status))
         elif message_received_flag == False:
@@ -291,11 +296,16 @@ def on_message(client, userdata, message):
             ##
             #
     # WC is Webcam from cloud
-    elif recieved_message[13:18] == "webca":
+    elif msg_type_received == "webcam":
+        print(recieved_message["power"])
+        print("***************************************")
         # power on/off webcam and keep factory running.
         print("Webcam")
     # CW is Control Webcam from cloud
-    elif recieved_message[13:18] == "contr":
+    elif msg_type_received == "control webcam":
+        print(recieved_message["y_turntable"])
+        print(recieved_message["x_turntable"])
+        print("***************************************")
         # move camera and keep factory running.
         print("Control Webcam")
 

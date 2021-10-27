@@ -30,36 +30,35 @@ hand_shake={
 }
 #Removed _ from mes_type to match the slicer better.
 send_order={
-    "msgtype": "order",
-    "sim_msg_id": "SO####",
+    "msg_type": "order",
+    "cloud_id": "SO####",
     "location" : "location01"
 }
 
 request_status={
-    "msgtype": "request status",
-    "sim_msg_id": "RS####"
+    "msg_type": "request status",
+    "cloud_id": "RS####"
 }
 
 perform_inventory={
-    "msgtype": "perform inventory",
-    "sim_msg_id": "PI####"
+    "msg_type": "perform inventory",
+    "cloud_id": "PI####"
 }
 
 cancel_order={
-    "msgtype": "cancel order",
-    "sim_msg_id": "CO####",
-    "order_id": "SO####"
+    "msg_type": "cancel order",
+    "cloud_id": "CO####"
 }
 
 webcam={
-    "msgtype": "webcam",
-    "cloud_msg_id": "WP####",
+    "msg_type": "webcam",
+    "cloud_id": "WP####",
     "power": "True"
 }
 
 control_webcam={
-    "msgtype": "control webcam",
-    "cloud_msg_id": "CW####",
+    "msg_type": "control webcam",
+    "cloud_id": "CW####",
     "y_turntable": 1, 
     "x_turntable": 1
 }
@@ -98,7 +97,7 @@ while choice != 'q':
     ### CHOICE 1: Order a product from the factory ###
     if choice == '1':
         so_number = so_number + 1 #SO number generation
-        send_order["sim_msg_id"] = "SO" + str(so_number)
+        send_order["cloud_id"] = "SO" + str(so_number)
         client.publish("UofICapstone_Cloud", payload=json.dumps(send_order))
         #client.on_message = on_message
         time.sleep(3)
