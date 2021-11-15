@@ -43,19 +43,20 @@ hand_shake={
     "msg_type": "message confirmation",
     "msg_confirmation_id": "FC1000",
     "msg_type_received": "order"
+    "msg_id": "SO####"
 }
 #hand_shake["msg_confirmation_id"] = "CC1000"
 
 order_status={
-    "msg_type": "factory status",
+    "msg_type": "order status",
     "cloud_id": "SO1000",
     "disk_color_id": "RED01", 
     "order_complete": "True"
 }
 
 status={
-    "msg_type": "request status",
-    "cloud_id": "SO1000",
+    "msg_type": "status",
+    "cloud_id": "RS1000",
     "running": "False", 
     "HBW": "False",
     "VGR": "False", 
@@ -108,6 +109,7 @@ inventory={
 cancel_status={
     "msg_type": "cancel status",
     "cloud_id": "CO####",
+    "order_id": "SO####"
     "canceled": "False"
 }
 
